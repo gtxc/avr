@@ -1,0 +1,160 @@
+   1               		.file	"PrintByte.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__tmp_reg__ = 0
+   6               	__zero_reg__ = 1
+   8               		.text
+   9               	.Ltext0:
+  17               	.global	PrintByte
+  19               	PrintByte:
+   1:src/PrintByte.c **** void PrintByte(char *OutputString,
+   2:src/PrintByte.c ****                char *PromptString,
+   3:src/PrintByte.c ****                char ByteVar)
+   4:src/PrintByte.c **** /* This function prints the unsigned value of a single byte variable. First,
+   5:src/PrintByte.c ****    PromptString is copied to OutputString, and then unsigned decimal value
+   6:src/PrintByte.c ****    of ByteVar is appended as a 3-character string. This function can replace
+   7:src/PrintByte.c ****    sprintf() for limited applications. For example,
+   8:src/PrintByte.c ****      sprintf(LCDtext, "%3d", ADCout);
+   9:src/PrintByte.c ****      sprintf(LCDtext, "Atten=%3d", Atten);
+  10:src/PrintByte.c ****    can be replaced by:
+  11:src/PrintByte.c ****      PrintByte(LCDtext, "", ADCout);
+  12:src/PrintByte.c ****      PrintByte(LCDtext, "Atten=", Atten);
+  13:src/PrintByte.c **** */
+  14:src/PrintByte.c **** {
+  21               	.LM0:
+  22               	.LFBB1:
+  23               	/* prologue: function */
+  24               	/* frame size = 0 */
+  25               	/* stack size = 0 */
+  26               	.L__stack_usage = 0
+  27 0000 FC01      		movw r30,r24
+  28 0002 DB01      		movw r26,r22
+  29               	.L2:
+  15:src/PrintByte.c ****   char *pOut, *pPrompt;
+  16:src/PrintByte.c ****   unsigned char Number, Digit;
+  17:src/PrintByte.c **** 
+  18:src/PrintByte.c **** // Copy prompt text to output:
+  19:src/PrintByte.c ****   pPrompt = PromptString;
+  20:src/PrintByte.c ****   pOut = OutputString;
+  21:src/PrintByte.c ****   while (*pPrompt != 0x00)
+  31               	.LM1:
+  32 0004 8D91      		ld r24,X+
+  34               	.LM2:
+  35 0006 8111      		cpse r24,__zero_reg__
+  36 0008 00C0      		rjmp .L3
+  22:src/PrintByte.c ****   { *pOut = *pPrompt;
+  23:src/PrintByte.c ****     pPrompt ++;
+  24:src/PrintByte.c ****     pOut ++;
+  25:src/PrintByte.c ****   };
+  26:src/PrintByte.c **** // Determine 100's digit:
+  27:src/PrintByte.c ****   Number = (unsigned char)ByteVar;
+  28:src/PrintByte.c ****   if (Number < 100)
+  38               	.LM3:
+  39 000a 4436      		cpi r20,lo8(100)
+  40 000c 00F4      		brsh .L4
+  29:src/PrintByte.c ****   { Digit = 0;
+  30:src/PrintByte.c ****     *pOut = ' ';
+  42               	.LM4:
+  43 000e 80E2      		ldi r24,lo8(32)
+  44 0010 8083      		st Z,r24
+  31:src/PrintByte.c ****   }
+  32:src/PrintByte.c ****   else
+  33:src/PrintByte.c ****   { Digit = Number / 100;
+  34:src/PrintByte.c ****     *pOut = Digit + '0';
+  35:src/PrintByte.c ****     Number -= Digit * 100;
+  36:src/PrintByte.c ****   }
+  37:src/PrintByte.c ****   pOut ++;
+  38:src/PrintByte.c **** // Determine 10's digit:
+  39:src/PrintByte.c ****   if (Number < 10)
+  46               	.LM5:
+  47 0012 90E2      		ldi r25,lo8(32)
+  48 0014 4A30      		cpi r20,lo8(10)
+  49 0016 00F0      		brlo .L5
+  50               	.L6:
+  40:src/PrintByte.c ****   { if (Digit == 0)
+  41:src/PrintByte.c ****       *pOut = ' ';
+  42:src/PrintByte.c ****     else
+  43:src/PrintByte.c ****       *pOut = '0';
+  44:src/PrintByte.c ****   }
+  45:src/PrintByte.c ****   else
+  46:src/PrintByte.c ****   { Digit = Number / 10;
+  52               	.LM6:
+  53 0018 842F      		mov r24,r20
+  54 001a 6AE0      		ldi r22,lo8(10)
+  55 001c 0E94 0000 		call __udivmodqi4
+  47:src/PrintByte.c ****     *pOut = Digit + '0';
+  57               	.LM7:
+  58 0020 90E3      		ldi r25,lo8(48)
+  59 0022 980F      		add r25,r24
+  48:src/PrintByte.c ****     Number -= Digit * 10;
+  61               	.LM8:
+  62 0024 26EF      		ldi r18,lo8(-10)
+  63 0026 829F      		mul r24,r18
+  64 0028 400D      		add r20,r0
+  65 002a 1124      		clr __zero_reg__
+  66 002c 00C0      		rjmp .L5
+  67               	.L3:
+  22:src/PrintByte.c ****     pPrompt ++;
+  69               	.LM9:
+  70 002e 8193      		st Z+,r24
+  71 0030 00C0      		rjmp .L2
+  72               	.L4:
+  33:src/PrintByte.c ****     *pOut = Digit + '0';
+  74               	.LM10:
+  75 0032 842F      		mov r24,r20
+  76 0034 64E6      		ldi r22,lo8(100)
+  77 0036 0E94 0000 		call __udivmodqi4
+  34:src/PrintByte.c ****     Number -= Digit * 100;
+  79               	.LM11:
+  80 003a 90E3      		ldi r25,lo8(48)
+  81 003c 980F      		add r25,r24
+  34:src/PrintByte.c ****     Number -= Digit * 100;
+  83               	.LM12:
+  84 003e 9083      		st Z,r25
+  35:src/PrintByte.c ****   }
+  86               	.LM13:
+  87 0040 2CE9      		ldi r18,lo8(-100)
+  88 0042 829F      		mul r24,r18
+  89 0044 400D      		add r20,r0
+  90 0046 1124      		clr __zero_reg__
+  39:src/PrintByte.c ****   { if (Digit == 0)
+  92               	.LM14:
+  93 0048 90E3      		ldi r25,lo8(48)
+  94 004a 4A30      		cpi r20,lo8(10)
+  95 004c 00F4      		brsh .L6
+  96               	.L5:
+  43:src/PrintByte.c ****   }
+  98               	.LM15:
+  99 004e 9183      		std Z+1,r25
+  49:src/PrintByte.c ****   }
+  50:src/PrintByte.c ****   pOut ++;
+  51:src/PrintByte.c **** // Whatever left in Number is 1's digit:
+  52:src/PrintByte.c ****   *pOut = Number + '0';
+ 101               	.LM16:
+ 102 0050 405D      		subi r20,lo8(-(48))
+ 104               	.LM17:
+ 105 0052 4283      		std Z+2,r20
+  53:src/PrintByte.c ****   pOut ++;
+  54:src/PrintByte.c **** // Terminate the output string:
+  55:src/PrintByte.c ****   *pOut = 0x00;
+ 107               	.LM18:
+ 108 0054 1382      		std Z+3,__zero_reg__
+ 109               	/* epilogue start */
+  56:src/PrintByte.c **** }
+ 111               	.LM19:
+ 112 0056 0895      		ret
+ 118               	.Lscope1:
+ 120               	.Letext0:
+ 121               		.ident	"GCC: (GNU) 11.2.0"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 PrintByte.c
+     /tmp/ccDglib8.s:2      *ABS*:000000000000003e __SP_H__
+     /tmp/ccDglib8.s:3      *ABS*:000000000000003d __SP_L__
+     /tmp/ccDglib8.s:4      *ABS*:000000000000003f __SREG__
+     /tmp/ccDglib8.s:5      *ABS*:0000000000000000 __tmp_reg__
+     /tmp/ccDglib8.s:6      *ABS*:0000000000000001 __zero_reg__
+     /tmp/ccDglib8.s:19     .text:0000000000000000 PrintByte
+
+UNDEFINED SYMBOLS
+__udivmodqi4

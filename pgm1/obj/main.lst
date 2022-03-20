@@ -1,0 +1,64 @@
+   1               		.file	"main.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__tmp_reg__ = 0
+   6               	__zero_reg__ = 1
+   8               		.text
+   9               	.Ltext0:
+  11               		.section	.text.startup,"ax",@progbits
+  16               	.global	main
+  18               	main:
+   1:src/main.c    **** /*
+   2:src/main.c    ****  * Created by gt on 1/2/22 - 9:26 PM.
+   3:src/main.c    ****  * Copyright (c) 2022 GTXC. All rights reserved.
+   4:src/main.c    ****  */
+   5:src/main.c    **** 
+   6:src/main.c    **** #include <avr/io.h>
+   7:src/main.c    **** #include <util/delay.h>
+   8:src/main.c    **** #include <setjmp.h>
+   9:src/main.c    **** 
+  10:src/main.c    **** int main(void) {
+  20               	.LM0:
+  21               	.LFBB1:
+  22               	/* prologue: function */
+  23               	/* frame size = 0 */
+  24               	/* stack size = 0 */
+  25               	.L__stack_usage = 0
+  11:src/main.c    **** //    jmp_buf buf;
+  12:src/main.c    **** //    setjmp(buf);
+  13:src/main.c    ****     DDRB |= 0xFF;
+  27               	.LM1:
+  28 0000 84B1      		in r24,0x4
+  29 0002 8FEF      		ldi r24,lo8(-1)
+  30 0004 84B9      		out 0x4,r24
+  14:src/main.c    ****     for (;;) {
+  15:src/main.c    ****         PORTB = 0x0F;
+  32               	.LM2:
+  33 0006 9FE0      		ldi r25,lo8(15)
+  16:src/main.c    **** //        _delay_us(0.25);
+  17:src/main.c    **** //        _delay_ms(500);
+  18:src/main.c    ****         PORTB = 0x80;
+  35               	.LM3:
+  36 0008 80E8      		ldi r24,lo8(-128)
+  37               	.L2:
+  15:src/main.c    **** //        _delay_us(0.25);
+  39               	.LM4:
+  40 000a 95B9      		out 0x5,r25
+  42               	.LM5:
+  43 000c 85B9      		out 0x5,r24
+  44 000e 00C0      		rjmp .L2
+  46               	.Lscope1:
+  47               		.text
+  49               	.Letext0:
+  50               		.ident	"GCC: (GNU) 11.2.0"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 main.c
+     /tmp/cc6ldoD6.s:2      *ABS*:000000000000003e __SP_H__
+     /tmp/cc6ldoD6.s:3      *ABS*:000000000000003d __SP_L__
+     /tmp/cc6ldoD6.s:4      *ABS*:000000000000003f __SREG__
+     /tmp/cc6ldoD6.s:5      *ABS*:0000000000000000 __tmp_reg__
+     /tmp/cc6ldoD6.s:6      *ABS*:0000000000000001 __zero_reg__
+     /tmp/cc6ldoD6.s:18     .text.startup:0000000000000000 main
+
+NO UNDEFINED SYMBOLS

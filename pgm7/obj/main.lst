@@ -1,0 +1,1131 @@
+   1               		.file	"main.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__tmp_reg__ = 0
+   6               	__zero_reg__ = 1
+   8               		.text
+   9               	.Ltext0:
+  15               	.global	EnQueueLCDBuffer
+  17               	EnQueueLCDBuffer:
+   1:src/main.c    **** /*
+   2:src/main.c    ****  * Created by gt on 1/2/22 - 9:26 PM.
+   3:src/main.c    ****  * Copyright (c) 2022 GTXC. All rights reserved.
+   4:src/main.c    ****  */
+   5:src/main.c    **** 
+   6:src/main.c    **** #include <avr/io.h>
+   7:src/main.c    **** #include "LCDmodule.h"
+   8:src/main.c    **** #include <avr/interrupt.h>
+   9:src/main.c    **** #include <stdio.h>
+  10:src/main.c    **** 
+  11:src/main.c    **** #define LCDBufferSize 32
+  12:src/main.c    **** 
+  13:src/main.c    **** unsigned char LCDBuffer[LCDBufferSize];
+  14:src/main.c    **** unsigned char NByte = 0;
+  15:src/main.c    **** 
+  16:src/main.c    **** unsigned char atn = 1;
+  17:src/main.c    **** unsigned char LCDISREn = 1;
+  18:src/main.c    **** 
+  19:src/main.c    **** void EnQueueLCDBuffer(unsigned char ByteIn) {
+  19               	.LM0:
+  20               	.LFBB1:
+  21               	/* prologue: function */
+  22               	/* frame size = 0 */
+  23               	/* stack size = 0 */
+  24               	.L__stack_usage = 0
+  20:src/main.c    ****     static unsigned char *pLCDIn = LCDBuffer;
+  21:src/main.c    ****     static unsigned char BCount = 0;
+  22:src/main.c    ****     if (NByte < LCDBufferSize) {
+  26               	.LM1:
+  27 0000 9091 0000 		lds r25,NByte
+  28 0004 9032      		cpi r25,lo8(32)
+  29 0006 00F4      		brsh .L1
+  30               	.LBB4:
+  31               	.LBB5:
+  23:src/main.c    ****         *pLCDIn = ByteIn;
+  33               	.LM2:
+  34 0008 E091 0000 		lds r30,pLCDIn.5
+  35 000c F091 0000 		lds r31,pLCDIn.5+1
+  37               	.LM3:
+  38 0010 8083      		st Z,r24
+  24:src/main.c    ****         ++BCount;
+  40               	.LM4:
+  41 0012 8091 0000 		lds r24,BCount.4
+  42 0016 8F5F      		subi r24,lo8(-(1))
+  43 0018 8093 0000 		sts BCount.4,r24
+  25:src/main.c    ****         if (BCount == LCDBufferSize) {
+  45               	.LM5:
+  46 001c 8032      		cpi r24,lo8(32)
+  47 001e 01F4      		brne .L3
+  26:src/main.c    ****             pLCDIn = LCDBuffer;
+  49               	.LM6:
+  50 0020 80E0      		ldi r24,lo8(LCDBuffer)
+  51 0022 90E0      		ldi r25,hi8(LCDBuffer)
+  52 0024 9093 0000 		sts pLCDIn.5+1,r25
+  53 0028 8093 0000 		sts pLCDIn.5,r24
+  27:src/main.c    ****             BCount = 0;
+  55               	.LM7:
+  56 002c 1092 0000 		sts BCount.4,__zero_reg__
+  57               	.L4:
+  28:src/main.c    ****         } else {
+  29:src/main.c    ****             ++pLCDIn;
+  30:src/main.c    ****         }
+  31:src/main.c    ****         ++NByte;
+  59               	.LM8:
+  60 0030 8091 0000 		lds r24,NByte
+  61 0034 8F5F      		subi r24,lo8(-(1))
+  62 0036 8093 0000 		sts NByte,r24
+  63               	.L1:
+  64               	/* epilogue start */
+  65               	.LBE5:
+  66               	.LBE4:
+  32:src/main.c    ****     }
+  33:src/main.c    ****     return;
+  34:src/main.c    **** }
+  68               	.LM9:
+  69 003a 0895      		ret
+  70               	.L3:
+  71               	.LBB7:
+  72               	.LBB6:
+  29:src/main.c    ****         }
+  74               	.LM10:
+  75 003c 3196      		adiw r30,1
+  76 003e F093 0000 		sts pLCDIn.5+1,r31
+  77 0042 E093 0000 		sts pLCDIn.5,r30
+  78 0046 00C0      		rjmp .L4
+  79               	.LBE6:
+  80               	.LBE7:
+  86               	.Lscope1:
+  89               	.global	DeQueueLCDBuffer
+  91               	DeQueueLCDBuffer:
+  35:src/main.c    **** 
+  36:src/main.c    **** void DeQueueLCDBuffer(void) {
+  93               	.LM11:
+  94               	.LFBB2:
+  95               	/* prologue: function */
+  96               	/* frame size = 0 */
+  97               	/* stack size = 0 */
+  98               	.L__stack_usage = 0
+  37:src/main.c    ****     static unsigned char *pLCDOut = LCDBuffer;
+  38:src/main.c    ****     static unsigned char BCount = LCDBufferSize;
+  39:src/main.c    ****     unsigned char ByteOut;
+  40:src/main.c    **** 
+  41:src/main.c    ****     if (NByte > 0) {
+ 100               	.LM12:
+ 101 0048 8091 0000 		lds r24,NByte
+ 102 004c 8823      		tst r24
+ 103 004e 01F0      		breq .L5
+ 104               	.LBB10:
+ 105               	.LBB11:
+  42:src/main.c    ****         ByteOut = *pLCDOut >> 4;
+ 107               	.LM13:
+ 108 0050 E091 0000 		lds r30,pLCDOut.3
+ 109 0054 F091 0000 		lds r31,pLCDOut.3+1
+ 110 0058 9081      		ld r25,Z
+ 112               	.LM14:
+ 113 005a 892F      		mov r24,r25
+ 114 005c 8295      		swap r24
+ 115 005e 8F70      		andi r24,lo8(15)
+  43:src/main.c    ****         if ((*pLCDOut & 0x80) == 0) {
+ 117               	.LM15:
+ 118 0060 97FF      		sbrs r25,7
+  44:src/main.c    ****             ByteOut |= 0x10;
+ 120               	.LM16:
+ 121 0062 8061      		ori r24,lo8(16)
+ 122               	.L7:
+  45:src/main.c    ****         }
+  46:src/main.c    ****         _LCDport = ByteOut;
+ 124               	.LM17:
+ 125 0064 85B9      		out 0x5,r24
+  47:src/main.c    ****         _LCDport = 0x40 | ByteOut;
+ 127               	.LM18:
+ 128 0066 982F      		mov r25,r24
+ 129 0068 9064      		ori r25,lo8(64)
+ 130 006a 95B9      		out 0x5,r25
+  48:src/main.c    ****         _LCDport = ByteOut;
+ 132               	.LM19:
+ 133 006c 85B9      		out 0x5,r24
+  49:src/main.c    ****         ByteOut = (ByteOut & 0xF0) | (*pLCDOut & 0x0F);
+ 135               	.LM20:
+ 136 006e E091 0000 		lds r30,pLCDOut.3
+ 137 0072 F091 0000 		lds r31,pLCDOut.3+1
+ 139               	.LM21:
+ 140 0076 9081      		ld r25,Z
+ 141 0078 9F70      		andi r25,lo8(15)
+ 143               	.LM22:
+ 144 007a 807F      		andi r24,lo8(-16)
+ 146               	.LM23:
+ 147 007c 892B      		or r24,r25
+  50:src/main.c    ****         _LCDport = ByteOut;
+ 149               	.LM24:
+ 150 007e 85B9      		out 0x5,r24
+  51:src/main.c    ****         _LCDport = 0x40 | ByteOut;
+ 152               	.LM25:
+ 153 0080 982F      		mov r25,r24
+ 154 0082 9064      		ori r25,lo8(64)
+ 155 0084 95B9      		out 0x5,r25
+  52:src/main.c    ****         _LCDport = ByteOut;
+ 157               	.LM26:
+ 158 0086 85B9      		out 0x5,r24
+  53:src/main.c    ****         _LCDport = 0x00;
+ 160               	.LM27:
+ 161 0088 15B8      		out 0x5,__zero_reg__
+  54:src/main.c    ****         --BCount;
+ 163               	.LM28:
+ 164 008a 8091 0000 		lds r24,BCount.2
+ 165 008e 8150      		subi r24,lo8(-(-1))
+ 166 0090 8093 0000 		sts BCount.2,r24
+  55:src/main.c    ****         if (BCount == 0) {
+ 168               	.LM29:
+ 169 0094 8111      		cpse r24,__zero_reg__
+ 170 0096 00C0      		rjmp .L8
+  56:src/main.c    ****             pLCDOut = LCDBuffer;
+ 172               	.LM30:
+ 173 0098 80E0      		ldi r24,lo8(LCDBuffer)
+ 174 009a 90E0      		ldi r25,hi8(LCDBuffer)
+ 175 009c 9093 0000 		sts pLCDOut.3+1,r25
+ 176 00a0 8093 0000 		sts pLCDOut.3,r24
+  57:src/main.c    ****             BCount = LCDBufferSize;
+ 178               	.LM31:
+ 179 00a4 80E2      		ldi r24,lo8(32)
+ 180 00a6 8093 0000 		sts BCount.2,r24
+ 181               	.L9:
+  58:src/main.c    ****         } else {
+  59:src/main.c    ****             ++pLCDOut;
+  60:src/main.c    ****         }
+  61:src/main.c    ****         --NByte;
+ 183               	.LM32:
+ 184 00aa 8091 0000 		lds r24,NByte
+ 185 00ae 8150      		subi r24,lo8(-(-1))
+ 186 00b0 8093 0000 		sts NByte,r24
+ 187               	.L5:
+ 188               	/* epilogue start */
+ 189               	.LBE11:
+ 190               	.LBE10:
+  62:src/main.c    ****     }
+  63:src/main.c    ****     return;
+  64:src/main.c    **** }
+ 192               	.LM33:
+ 193 00b4 0895      		ret
+ 194               	.L8:
+ 195               	.LBB13:
+ 196               	.LBB12:
+  59:src/main.c    ****         }
+ 198               	.LM34:
+ 199 00b6 8091 0000 		lds r24,pLCDOut.3
+ 200 00ba 9091 0000 		lds r25,pLCDOut.3+1
+ 201 00be 0196      		adiw r24,1
+ 202 00c0 9093 0000 		sts pLCDOut.3+1,r25
+ 203 00c4 8093 0000 		sts pLCDOut.3,r24
+ 204 00c8 00C0      		rjmp .L9
+ 205               	.LBE12:
+ 206               	.LBE13:
+ 212               	.Lscope2:
+ 213               		.section	.rodata.str1.1,"aMS",@progbits,1
+ 214               	.LC0:
+ 215 0000 00        		.string	""
+ 216               		.text
+ 218               	.global	__vector_11
+ 220               	__vector_11:
+  65:src/main.c    **** 
+  66:src/main.c    **** ISR(TIMER1_COMPA_vect) {
+ 222               	.LM35:
+ 223               	.LFBB3:
+ 224 00ca 1F92      		push r1
+ 225 00cc 0F92      		push r0
+ 226 00ce 0FB6      		in r0,__SREG__
+ 227 00d0 0F92      		push r0
+ 228 00d2 1124      		clr __zero_reg__
+ 229 00d4 0F93      		push r16
+ 230 00d6 1F93      		push r17
+ 231 00d8 2F93      		push r18
+ 232 00da 3F93      		push r19
+ 233 00dc 4F93      		push r20
+ 234 00de 5F93      		push r21
+ 235 00e0 6F93      		push r22
+ 236 00e2 7F93      		push r23
+ 237 00e4 8F93      		push r24
+ 238 00e6 9F93      		push r25
+ 239 00e8 AF93      		push r26
+ 240 00ea BF93      		push r27
+ 241 00ec CF93      		push r28
+ 242 00ee EF93      		push r30
+ 243 00f0 FF93      		push r31
+ 244               	/* prologue: Signal */
+ 245               	/* frame size = 0 */
+ 246               	/* stack size = 18 */
+ 247               	.L__stack_usage = 18
+  67:src/main.c    ****     PORTD |= _BV(PORTD4);
+ 249               	.LM36:
+ 250 00f2 5C9A      		sbi 0xb,4
+  68:src/main.c    ****     static char *pText;
+  69:src/main.c    ****     static char LCDText[16];
+  70:src/main.c    ****     unsigned char result;
+  71:src/main.c    ****     ADCSRA |= _BV(ADSC);
+ 252               	.LM37:
+ 253 00f4 8091 7A00 		lds r24,122
+ 254 00f8 8064      		ori r24,lo8(64)
+ 255 00fa 8093 7A00 		sts 122,r24
+ 256               	.L14:
+  72:src/main.c    ****     while (ADCSRA & _BV(ADSC)) {}
+ 258               	.LM38:
+ 259 00fe 8091 7A00 		lds r24,122
+ 260 0102 86FD      		sbrc r24,6
+ 261 0104 00C0      		rjmp .L14
+  73:src/main.c    ****     result = ADCH >> (atn / 2);
+ 263               	.LM39:
+ 264 0106 8091 7900 		lds r24,121
+ 266               	.LM40:
+ 267 010a 2091 0000 		lds r18,atn
+ 269               	.LM41:
+ 270 010e 90E0      		ldi r25,0
+ 272               	.LM42:
+ 273 0110 322F      		mov r19,r18
+ 274 0112 3695      		lsr r19
+ 276               	.LM43:
+ 277 0114 00C0      		rjmp 2f
+ 278               		1:
+ 279 0116 9595      		asr r25
+ 280 0118 8795      		ror r24
+ 281               		2:
+ 282 011a 3A95      		dec r19
+ 283 011c 02F4      		brpl 1b
+ 285               	.LM44:
+ 286 011e C82F      		mov r28,r24
+  74:src/main.c    ****     result = atn % 2 ? result : result + (result >> 1);
+ 288               	.LM45:
+ 289 0120 20FD      		sbrc r18,0
+ 290 0122 00C0      		rjmp .L15
+ 292               	.LM46:
+ 293 0124 C695      		lsr r28
+ 295               	.LM47:
+ 296 0126 C80F      		add r28,r24
+ 297               	.L15:
+  75:src/main.c    ****     if (LCDISREn == 1) {
+ 299               	.LM48:
+ 300 0128 8091 0000 		lds r24,LCDISREn
+ 301 012c 8130      		cpi r24,lo8(1)
+ 302 012e 01F0      		breq .L16
+ 303               	.L21:
+  76:src/main.c    ****         PrintByte(LCDText, "", result);
+  77:src/main.c    ****         EnQueueLCDBuffer(0x80);
+  78:src/main.c    ****         pText = LCDText;
+  79:src/main.c    ****         while (*pText != 0x00) {
+  80:src/main.c    ****             EnQueueLCDBuffer(*pText);
+  81:src/main.c    ****             ++pText;
+  82:src/main.c    ****         }
+  83:src/main.c    ****     }
+  84:src/main.c    ****     if (NByte != 0) {
+ 305               	.LM49:
+ 306 0130 8091 0000 		lds r24,NByte
+ 307 0134 8111      		cpse r24,__zero_reg__
+ 308 0136 00C0      		rjmp .L17
+ 309               	.L18:
+  85:src/main.c    ****         TIMSK2 |= _BV(OCIE2A);
+  86:src/main.c    ****     }
+  87:src/main.c    ****     OCR0A = result;
+ 311               	.LM50:
+ 312 0138 C7BD      		out 0x27,r28
+  88:src/main.c    ****     PORTD &= ~_BV(PORTD4);
+ 314               	.LM51:
+ 315 013a 5C98      		cbi 0xb,4
+ 316               	/* epilogue start */
+  89:src/main.c    **** }
+ 318               	.LM52:
+ 319 013c FF91      		pop r31
+ 320 013e EF91      		pop r30
+ 321 0140 CF91      		pop r28
+ 322 0142 BF91      		pop r27
+ 323 0144 AF91      		pop r26
+ 324 0146 9F91      		pop r25
+ 325 0148 8F91      		pop r24
+ 326 014a 7F91      		pop r23
+ 327 014c 6F91      		pop r22
+ 328 014e 5F91      		pop r21
+ 329 0150 4F91      		pop r20
+ 330 0152 3F91      		pop r19
+ 331 0154 2F91      		pop r18
+ 332 0156 1F91      		pop r17
+ 333 0158 0F91      		pop r16
+ 334 015a 0F90      		pop r0
+ 335 015c 0FBE      		out __SREG__,r0
+ 336 015e 0F90      		pop r0
+ 337 0160 1F90      		pop r1
+ 338 0162 1895      		reti
+ 339               	.L16:
+  76:src/main.c    ****         EnQueueLCDBuffer(0x80);
+ 341               	.LM53:
+ 342 0164 4C2F      		mov r20,r28
+ 343 0166 60E0      		ldi r22,lo8(.LC0)
+ 344 0168 70E0      		ldi r23,hi8(.LC0)
+ 345 016a 80E0      		ldi r24,lo8(LCDText.1)
+ 346 016c 90E0      		ldi r25,hi8(LCDText.1)
+ 347 016e 0E94 0000 		call PrintByte
+  77:src/main.c    ****         pText = LCDText;
+ 349               	.LM54:
+ 350 0172 80E8      		ldi r24,lo8(-128)
+ 351 0174 0E94 0000 		call EnQueueLCDBuffer
+  79:src/main.c    ****             EnQueueLCDBuffer(*pText);
+ 353               	.LM55:
+ 354 0178 00E0      		ldi r16,lo8(LCDText.1)
+ 355 017a 10E0      		ldi r17,hi8(LCDText.1)
+ 356               	.L19:
+  78:src/main.c    ****         while (*pText != 0x00) {
+ 358               	.LM56:
+ 359 017c 1093 0000 		sts pText.0+1,r17
+ 360 0180 0093 0000 		sts pText.0,r16
+  79:src/main.c    ****             EnQueueLCDBuffer(*pText);
+ 362               	.LM57:
+ 363 0184 F801      		movw r30,r16
+ 364 0186 8081      		ld r24,Z
+  79:src/main.c    ****             EnQueueLCDBuffer(*pText);
+ 366               	.LM58:
+ 367 0188 8823      		tst r24
+ 368 018a 01F0      		breq .L21
+  80:src/main.c    ****             ++pText;
+ 370               	.LM59:
+ 371 018c 0E94 0000 		call EnQueueLCDBuffer
+  81:src/main.c    ****         }
+ 373               	.LM60:
+ 374 0190 0F5F      		subi r16,-1
+ 375 0192 1F4F      		sbci r17,-1
+ 376 0194 00C0      		rjmp .L19
+ 377               	.L17:
+  85:src/main.c    ****     }
+ 379               	.LM61:
+ 380 0196 8091 7000 		lds r24,112
+ 381 019a 8260      		ori r24,lo8(2)
+ 382 019c 8093 7000 		sts 112,r24
+ 383 01a0 00C0      		rjmp .L18
+ 391               	.Lscope3:
+ 393               	.global	__vector_7
+ 395               	__vector_7:
+  90:src/main.c    **** 
+  91:src/main.c    **** ISR(TIMER2_COMPA_vect) {
+ 397               	.LM62:
+ 398               	.LFBB4:
+ 399 01a2 1F92      		push r1
+ 400 01a4 0F92      		push r0
+ 401 01a6 0FB6      		in r0,__SREG__
+ 402 01a8 0F92      		push r0
+ 403 01aa 1124      		clr __zero_reg__
+ 404 01ac 2F93      		push r18
+ 405 01ae 3F93      		push r19
+ 406 01b0 4F93      		push r20
+ 407 01b2 5F93      		push r21
+ 408 01b4 6F93      		push r22
+ 409 01b6 7F93      		push r23
+ 410 01b8 8F93      		push r24
+ 411 01ba 9F93      		push r25
+ 412 01bc AF93      		push r26
+ 413 01be BF93      		push r27
+ 414 01c0 EF93      		push r30
+ 415 01c2 FF93      		push r31
+ 416               	/* prologue: Signal */
+ 417               	/* frame size = 0 */
+ 418               	/* stack size = 15 */
+ 419               	.L__stack_usage = 15
+  92:src/main.c    ****     PORTD |= _BV(PORTD5);
+ 421               	.LM63:
+ 422 01c4 5D9A      		sbi 0xb,5
+  93:src/main.c    ****     if (LCDISREn == 1) {
+ 424               	.LM64:
+ 425 01c6 8091 0000 		lds r24,LCDISREn
+ 426 01ca 8130      		cpi r24,lo8(1)
+ 427 01cc 01F4      		brne .L24
+  94:src/main.c    ****         DeQueueLCDBuffer();
+ 429               	.LM65:
+ 430 01ce 0E94 0000 		call DeQueueLCDBuffer
+  95:src/main.c    ****         if (NByte == 0) {
+ 432               	.LM66:
+ 433 01d2 8091 0000 		lds r24,NByte
+ 434 01d6 8111      		cpse r24,__zero_reg__
+ 435 01d8 00C0      		rjmp .L25
+  96:src/main.c    ****             TIMSK2 &= ~_BV(OCIE2A);
+ 437               	.LM67:
+ 438 01da 8091 7000 		lds r24,112
+ 439 01de 8D7F      		andi r24,lo8(-3)
+ 440 01e0 8093 7000 		sts 112,r24
+ 441               	.L24:
+  97:src/main.c    ****         } else {
+  98:src/main.c    ****             TCNT2 = 0x0;
+  99:src/main.c    ****             TIFR2 |= _BV(OCF2A);
+ 100:src/main.c    ****         }
+ 101:src/main.c    ****     }
+ 102:src/main.c    ****     PORTD &= ~_BV(PORTD5);
+ 443               	.LM68:
+ 444 01e4 5D98      		cbi 0xb,5
+ 445               	/* epilogue start */
+ 103:src/main.c    **** }
+ 447               	.LM69:
+ 448 01e6 FF91      		pop r31
+ 449 01e8 EF91      		pop r30
+ 450 01ea BF91      		pop r27
+ 451 01ec AF91      		pop r26
+ 452 01ee 9F91      		pop r25
+ 453 01f0 8F91      		pop r24
+ 454 01f2 7F91      		pop r23
+ 455 01f4 6F91      		pop r22
+ 456 01f6 5F91      		pop r21
+ 457 01f8 4F91      		pop r20
+ 458 01fa 3F91      		pop r19
+ 459 01fc 2F91      		pop r18
+ 460 01fe 0F90      		pop r0
+ 461 0200 0FBE      		out __SREG__,r0
+ 462 0202 0F90      		pop r0
+ 463 0204 1F90      		pop r1
+ 464 0206 1895      		reti
+ 465               	.L25:
+  98:src/main.c    ****             TIFR2 |= _BV(OCF2A);
+ 467               	.LM70:
+ 468 0208 1092 B200 		sts 178,__zero_reg__
+  99:src/main.c    ****         }
+ 470               	.LM71:
+ 471 020c B99A      		sbi 0x17,1
+ 472 020e 00C0      		rjmp .L24
+ 474               	.Lscope4:
+ 475               		.section	.rodata.str1.1
+ 476               	.LC1:
+ 477 0001 4174 7465 		.string	"Atten="
+ 477      6E3D 00
+ 478               		.section	.text.startup,"ax",@progbits
+ 483               	.global	main
+ 485               	main:
+ 104:src/main.c    **** 
+ 105:src/main.c    **** int main(void) {
+ 487               	.LM72:
+ 488               	.LFBB5:
+ 489 0000 CDB7      		in r28,__SP_L__
+ 490 0002 DEB7      		in r29,__SP_H__
+ 491 0004 6097      		sbiw r28,16
+ 492 0006 0FB6      		in __tmp_reg__,__SREG__
+ 493 0008 F894      		cli
+ 494 000a DEBF      		out __SP_H__,r29
+ 495 000c 0FBE      		out __SREG__,__tmp_reg__
+ 496 000e CDBF      		out __SP_L__,r28
+ 497               	/* prologue: function */
+ 498               	/* frame size = 16 */
+ 499               	/* stack size = 16 */
+ 500               	.L__stack_usage = 16
+ 106:src/main.c    ****     cli();
+ 502               	.LM73:
+ 503               	/* #APP */
+ 504               	 ;  106 "src/main.c" 1
+ 505 0010 F894      		cli
+ 506               	 ;  0 "" 2
+ 107:src/main.c    ****     DDRB = 0xFF;
+ 508               	.LM74:
+ 509               	/* #NOAPP */
+ 510 0012 8FEF      		ldi r24,lo8(-1)
+ 511 0014 84B9      		out 0x4,r24
+ 108:src/main.c    ****     DDRC = 0xFC;
+ 513               	.LM75:
+ 514 0016 8CEF      		ldi r24,lo8(-4)
+ 515 0018 87B9      		out 0x7,r24
+ 109:src/main.c    ****     DDRD = 0xFC;
+ 517               	.LM76:
+ 518 001a 8AB9      		out 0xa,r24
+ 110:src/main.c    **** 
+ 111:src/main.c    ****     DIDR0 = 0x03;
+ 520               	.LM77:
+ 521 001c 83E0      		ldi r24,lo8(3)
+ 522 001e 8093 7E00 		sts 126,r24
+ 112:src/main.c    **** 
+ 113:src/main.c    ****     PRR &= ~_BV(PRADC);
+ 524               	.LM78:
+ 525 0022 8091 6400 		lds r24,100
+ 526 0026 8E7F      		andi r24,lo8(-2)
+ 527 0028 8093 6400 		sts 100,r24
+ 114:src/main.c    ****     PRR &= ~_BV(PRTIM0);
+ 529               	.LM79:
+ 530 002c 8091 6400 		lds r24,100
+ 531 0030 8F7D      		andi r24,lo8(-33)
+ 532 0032 8093 6400 		sts 100,r24
+ 115:src/main.c    ****     PRR &= ~_BV(PRTIM1);
+ 534               	.LM80:
+ 535 0036 8091 6400 		lds r24,100
+ 536 003a 877F      		andi r24,lo8(-9)
+ 537 003c 8093 6400 		sts 100,r24
+ 116:src/main.c    ****     PRR &= ~_BV(PRTIM2);
+ 539               	.LM81:
+ 540 0040 8091 6400 		lds r24,100
+ 541 0044 8F7B      		andi r24,lo8(-65)
+ 542 0046 8093 6400 		sts 100,r24
+ 117:src/main.c    **** 
+ 118:src/main.c    **** 
+ 119:src/main.c    ****     TCCR0A &= ~_BV(COM0A0);
+ 544               	.LM82:
+ 545 004a 84B5      		in r24,0x24
+ 546 004c 8F7B      		andi r24,lo8(-65)
+ 547 004e 84BD      		out 0x24,r24
+ 120:src/main.c    ****     TCCR0A |= _BV(COM0A1);
+ 549               	.LM83:
+ 550 0050 84B5      		in r24,0x24
+ 551 0052 8068      		ori r24,lo8(-128)
+ 552 0054 84BD      		out 0x24,r24
+ 121:src/main.c    ****     TCCR0A &= ~_BV(COM0B0);
+ 554               	.LM84:
+ 555 0056 84B5      		in r24,0x24
+ 556 0058 8F7E      		andi r24,lo8(-17)
+ 557 005a 84BD      		out 0x24,r24
+ 122:src/main.c    ****     TCCR0A &= ~_BV(COM0B1);
+ 559               	.LM85:
+ 560 005c 84B5      		in r24,0x24
+ 561 005e 8F7D      		andi r24,lo8(-33)
+ 562 0060 84BD      		out 0x24,r24
+ 123:src/main.c    ****     TCCR0A |= _BV(WGM00);
+ 564               	.LM86:
+ 565 0062 84B5      		in r24,0x24
+ 566 0064 8160      		ori r24,lo8(1)
+ 567 0066 84BD      		out 0x24,r24
+ 124:src/main.c    ****     TCCR0A |= _BV(WGM01);
+ 569               	.LM87:
+ 570 0068 84B5      		in r24,0x24
+ 571 006a 8260      		ori r24,lo8(2)
+ 572 006c 84BD      		out 0x24,r24
+ 125:src/main.c    ****     TCCR0B &= ~_BV(WGM02);
+ 574               	.LM88:
+ 575 006e 85B5      		in r24,0x25
+ 576 0070 877F      		andi r24,lo8(-9)
+ 577 0072 85BD      		out 0x25,r24
+ 126:src/main.c    **** 
+ 127:src/main.c    ****     TCCR0B |= _BV(CS00);
+ 579               	.LM89:
+ 580 0074 85B5      		in r24,0x25
+ 581 0076 8160      		ori r24,lo8(1)
+ 582 0078 85BD      		out 0x25,r24
+ 128:src/main.c    ****     TCCR0B &= ~_BV(CS01);
+ 584               	.LM90:
+ 585 007a 85B5      		in r24,0x25
+ 586 007c 8D7F      		andi r24,lo8(-3)
+ 587 007e 85BD      		out 0x25,r24
+ 129:src/main.c    ****     TCCR0B &= ~_BV(CS02);
+ 589               	.LM91:
+ 590 0080 85B5      		in r24,0x25
+ 591 0082 8B7F      		andi r24,lo8(-5)
+ 592 0084 85BD      		out 0x25,r24
+ 130:src/main.c    ****     TCCR0B &= ~_BV(FOC0A);
+ 594               	.LM92:
+ 595 0086 85B5      		in r24,0x25
+ 596 0088 8F77      		andi r24,lo8(127)
+ 597 008a 85BD      		out 0x25,r24
+ 131:src/main.c    ****     TCCR0B &= ~_BV(FOC0B);
+ 599               	.LM93:
+ 600 008c 85B5      		in r24,0x25
+ 601 008e 8F7B      		andi r24,lo8(-65)
+ 602 0090 85BD      		out 0x25,r24
+ 132:src/main.c    **** 
+ 133:src/main.c    ****     TIMSK0 &= ~_BV(OCIE0A);
+ 604               	.LM94:
+ 605 0092 8091 6E00 		lds r24,110
+ 606 0096 8D7F      		andi r24,lo8(-3)
+ 607 0098 8093 6E00 		sts 110,r24
+ 134:src/main.c    ****     OCR0A = 0x00;
+ 609               	.LM95:
+ 610 009c 17BC      		out 0x27,__zero_reg__
+ 135:src/main.c    **** 
+ 136:src/main.c    **** 
+ 137:src/main.c    ****     TCCR1A &= ~_BV(WGM10);
+ 612               	.LM96:
+ 613 009e 8091 8000 		lds r24,128
+ 614 00a2 8E7F      		andi r24,lo8(-2)
+ 615 00a4 8093 8000 		sts 128,r24
+ 138:src/main.c    ****     TCCR1A &= ~_BV(WGM11);
+ 617               	.LM97:
+ 618 00a8 8091 8000 		lds r24,128
+ 619 00ac 8D7F      		andi r24,lo8(-3)
+ 620 00ae 8093 8000 		sts 128,r24
+ 139:src/main.c    ****     TCCR1A &= ~_BV(COM1A0);
+ 622               	.LM98:
+ 623 00b2 8091 8000 		lds r24,128
+ 624 00b6 8F7B      		andi r24,lo8(-65)
+ 625 00b8 8093 8000 		sts 128,r24
+ 140:src/main.c    ****     TCCR1A &= ~_BV(COM1A1);
+ 627               	.LM99:
+ 628 00bc 8091 8000 		lds r24,128
+ 629 00c0 8F77      		andi r24,lo8(127)
+ 630 00c2 8093 8000 		sts 128,r24
+ 141:src/main.c    ****     TCCR1A &= ~_BV(COM1B0);
+ 632               	.LM100:
+ 633 00c6 8091 8000 		lds r24,128
+ 634 00ca 8F7E      		andi r24,lo8(-17)
+ 635 00cc 8093 8000 		sts 128,r24
+ 142:src/main.c    ****     TCCR1A &= ~_BV(COM1B1);
+ 637               	.LM101:
+ 638 00d0 8091 8000 		lds r24,128
+ 639 00d4 8F7D      		andi r24,lo8(-33)
+ 640 00d6 8093 8000 		sts 128,r24
+ 143:src/main.c    **** 
+ 144:src/main.c    ****     TCCR1B |= _BV(WGM12);
+ 642               	.LM102:
+ 643 00da 8091 8100 		lds r24,129
+ 644 00de 8860      		ori r24,lo8(8)
+ 645 00e0 8093 8100 		sts 129,r24
+ 145:src/main.c    ****     TCCR1B &= ~_BV(WGM13);
+ 647               	.LM103:
+ 648 00e4 8091 8100 		lds r24,129
+ 649 00e8 8F7E      		andi r24,lo8(-17)
+ 650 00ea 8093 8100 		sts 129,r24
+ 146:src/main.c    ****     TCCR1B &= ~_BV(CS10);
+ 652               	.LM104:
+ 653 00ee 8091 8100 		lds r24,129
+ 654 00f2 8E7F      		andi r24,lo8(-2)
+ 655 00f4 8093 8100 		sts 129,r24
+ 147:src/main.c    ****     TCCR1B |= _BV(CS11);
+ 657               	.LM105:
+ 658 00f8 8091 8100 		lds r24,129
+ 659 00fc 8260      		ori r24,lo8(2)
+ 660 00fe 8093 8100 		sts 129,r24
+ 148:src/main.c    ****     TCCR1B &= ~_BV(CS12);
+ 662               	.LM106:
+ 663 0102 8091 8100 		lds r24,129
+ 664 0106 8B7F      		andi r24,lo8(-5)
+ 665 0108 8093 8100 		sts 129,r24
+ 149:src/main.c    **** 
+ 150:src/main.c    ****     TCCR1C &= ~_BV(FOC1A);
+ 667               	.LM107:
+ 668 010c 8091 8200 		lds r24,130
+ 669 0110 8F77      		andi r24,lo8(127)
+ 670 0112 8093 8200 		sts 130,r24
+ 151:src/main.c    ****     TCCR1C &= ~_BV(FOC1B);
+ 672               	.LM108:
+ 673 0116 8091 8200 		lds r24,130
+ 674 011a 8F7B      		andi r24,lo8(-65)
+ 675 011c 8093 8200 		sts 130,r24
+ 152:src/main.c    **** 
+ 153:src/main.c    ****     TIMSK1 |= _BV(OCIE1A);
+ 677               	.LM109:
+ 678 0120 8091 6F00 		lds r24,111
+ 679 0124 8260      		ori r24,lo8(2)
+ 680 0126 8093 6F00 		sts 111,r24
+ 154:src/main.c    **** 
+ 155:src/main.c    ****     OCR1A = 0x03E8;
+ 682               	.LM110:
+ 683 012a 88EE      		ldi r24,lo8(-24)
+ 684 012c 93E0      		ldi r25,lo8(3)
+ 685 012e 9093 8900 		sts 136+1,r25
+ 686 0132 8093 8800 		sts 136,r24
+ 156:src/main.c    **** 
+ 157:src/main.c    **** 
+ 158:src/main.c    ****     TCCR2A &= ~_BV(COM2A0);
+ 688               	.LM111:
+ 689 0136 8091 B000 		lds r24,176
+ 690 013a 8F7B      		andi r24,lo8(-65)
+ 691 013c 8093 B000 		sts 176,r24
+ 159:src/main.c    ****     TCCR2A &= ~_BV(COM2A1);
+ 693               	.LM112:
+ 694 0140 8091 B000 		lds r24,176
+ 695 0144 8F77      		andi r24,lo8(127)
+ 696 0146 8093 B000 		sts 176,r24
+ 160:src/main.c    ****     TCCR2A &= ~_BV(COM2B0);
+ 698               	.LM113:
+ 699 014a 8091 B000 		lds r24,176
+ 700 014e 8F7E      		andi r24,lo8(-17)
+ 701 0150 8093 B000 		sts 176,r24
+ 161:src/main.c    ****     TCCR2A &= ~_BV(COM2B1);
+ 703               	.LM114:
+ 704 0154 8091 B000 		lds r24,176
+ 705 0158 8F7D      		andi r24,lo8(-33)
+ 706 015a 8093 B000 		sts 176,r24
+ 162:src/main.c    ****     TCCR2A &= ~_BV(WGM20);
+ 708               	.LM115:
+ 709 015e 8091 B000 		lds r24,176
+ 710 0162 8E7F      		andi r24,lo8(-2)
+ 711 0164 8093 B000 		sts 176,r24
+ 163:src/main.c    ****     TCCR2A |= _BV(WGM21);
+ 713               	.LM116:
+ 714 0168 8091 B000 		lds r24,176
+ 715 016c 8260      		ori r24,lo8(2)
+ 716 016e 8093 B000 		sts 176,r24
+ 164:src/main.c    **** 
+ 165:src/main.c    ****     TCCR2B &= ~_BV(WGM22);
+ 718               	.LM117:
+ 719 0172 8091 B100 		lds r24,177
+ 720 0176 877F      		andi r24,lo8(-9)
+ 721 0178 8093 B100 		sts 177,r24
+ 166:src/main.c    ****     TCCR2B &= ~_BV(CS20);
+ 723               	.LM118:
+ 724 017c 8091 B100 		lds r24,177
+ 725 0180 8E7F      		andi r24,lo8(-2)
+ 726 0182 8093 B100 		sts 177,r24
+ 167:src/main.c    ****     TCCR2B |= _BV(CS21);
+ 728               	.LM119:
+ 729 0186 8091 B100 		lds r24,177
+ 730 018a 8260      		ori r24,lo8(2)
+ 731 018c 8093 B100 		sts 177,r24
+ 168:src/main.c    ****     TCCR2B &= ~_BV(CS22);
+ 733               	.LM120:
+ 734 0190 8091 B100 		lds r24,177
+ 735 0194 8B7F      		andi r24,lo8(-5)
+ 736 0196 8093 B100 		sts 177,r24
+ 169:src/main.c    **** 
+ 170:src/main.c    ****     TIMSK2 |= _BV(OCIE2A);
+ 738               	.LM121:
+ 739 019a 8091 7000 		lds r24,112
+ 740 019e 8260      		ori r24,lo8(2)
+ 741 01a0 8093 7000 		sts 112,r24
+ 171:src/main.c    **** 
+ 172:src/main.c    ****     OCR2A = 0x0032;
+ 743               	.LM122:
+ 744 01a4 82E3      		ldi r24,lo8(50)
+ 745 01a6 8093 B300 		sts 179,r24
+ 173:src/main.c    **** 
+ 174:src/main.c    **** 
+ 175:src/main.c    ****     ADCSRA |= _BV(ADEN);
+ 747               	.LM123:
+ 748 01aa 8091 7A00 		lds r24,122
+ 749 01ae 8068      		ori r24,lo8(-128)
+ 750 01b0 8093 7A00 		sts 122,r24
+ 176:src/main.c    ****     ADCSRA &= ~_BV(ADPS0);
+ 752               	.LM124:
+ 753 01b4 8091 7A00 		lds r24,122
+ 754 01b8 8E7F      		andi r24,lo8(-2)
+ 755 01ba 8093 7A00 		sts 122,r24
+ 177:src/main.c    ****     ADCSRA |= _BV(ADPS1);
+ 757               	.LM125:
+ 758 01be 8091 7A00 		lds r24,122
+ 759 01c2 8260      		ori r24,lo8(2)
+ 760 01c4 8093 7A00 		sts 122,r24
+ 178:src/main.c    ****     ADCSRA |= _BV(ADPS2);
+ 762               	.LM126:
+ 763 01c8 8091 7A00 		lds r24,122
+ 764 01cc 8460      		ori r24,lo8(4)
+ 765 01ce 8093 7A00 		sts 122,r24
+ 179:src/main.c    **** 
+ 180:src/main.c    ****     ADMUX &= ~_BV(REFS0);
+ 767               	.LM127:
+ 768 01d2 8091 7C00 		lds r24,124
+ 769 01d6 8F7B      		andi r24,lo8(-65)
+ 770 01d8 8093 7C00 		sts 124,r24
+ 181:src/main.c    ****     ADMUX &= ~_BV(REFS1);
+ 772               	.LM128:
+ 773 01dc 8091 7C00 		lds r24,124
+ 774 01e0 8F77      		andi r24,lo8(127)
+ 775 01e2 8093 7C00 		sts 124,r24
+ 182:src/main.c    ****     ADMUX |= _BV(ADLAR);
+ 777               	.LM129:
+ 778 01e6 8091 7C00 		lds r24,124
+ 779 01ea 8062      		ori r24,lo8(32)
+ 780 01ec 8093 7C00 		sts 124,r24
+ 183:src/main.c    ****     ADMUX |= _BV(MUX0);
+ 782               	.LM130:
+ 783 01f0 8091 7C00 		lds r24,124
+ 784 01f4 8160      		ori r24,lo8(1)
+ 785 01f6 8093 7C00 		sts 124,r24
+ 184:src/main.c    ****     ADMUX &= ~_BV(MUX1);
+ 787               	.LM131:
+ 788 01fa 8091 7C00 		lds r24,124
+ 789 01fe 8D7F      		andi r24,lo8(-3)
+ 790 0200 8093 7C00 		sts 124,r24
+ 185:src/main.c    ****     ADMUX &= ~_BV(MUX2);
+ 792               	.LM132:
+ 793 0204 8091 7C00 		lds r24,124
+ 794 0208 8B7F      		andi r24,lo8(-5)
+ 795 020a 8093 7C00 		sts 124,r24
+ 186:src/main.c    ****     ADMUX &= ~_BV(MUX3);
+ 797               	.LM133:
+ 798 020e 8091 7C00 		lds r24,124
+ 799 0212 877F      		andi r24,lo8(-9)
+ 800 0214 8093 7C00 		sts 124,r24
+ 187:src/main.c    **** 
+ 188:src/main.c    ****     char *pText;
+ 189:src/main.c    ****     char LCDText[16];
+ 190:src/main.c    **** 
+ 191:src/main.c    ****     LCD_Init();
+ 802               	.LM134:
+ 803 0218 0E94 0000 		call LCD_Init
+ 192:src/main.c    ****     PrintByte(LCDText, "Atten=", atn);
+ 805               	.LM135:
+ 806 021c 4091 0000 		lds r20,atn
+ 807 0220 60E0      		ldi r22,lo8(.LC1)
+ 808 0222 70E0      		ldi r23,hi8(.LC1)
+ 809 0224 8E01      		movw r16,r28
+ 810 0226 0F5F      		subi r16,-1
+ 811 0228 1F4F      		sbci r17,-1
+ 812 022a C801      		movw r24,r16
+ 813 022c 0E94 0000 		call PrintByte
+ 193:src/main.c    ****     LCD_MoveCursor(2,1);
+ 815               	.LM136:
+ 816 0230 61E0      		ldi r22,lo8(1)
+ 817 0232 82E0      		ldi r24,lo8(2)
+ 818 0234 0E94 0000 		call LCD_MoveCursor
+ 194:src/main.c    ****     LCD_WriteString(LCDText);
+ 820               	.LM137:
+ 821 0238 C801      		movw r24,r16
+ 822 023a 0E94 0000 		call LCD_WriteString
+ 195:src/main.c    **** 
+ 196:src/main.c    ****     int PIND0Cur = 0;
+ 197:src/main.c    ****     int PIND1Cur = 0;
+ 198:src/main.c    ****     int PIND0Pre, PIND1Pre;
+ 199:src/main.c    **** 
+ 200:src/main.c    ****     sei();
+ 824               	.LM138:
+ 825               	/* #APP */
+ 826               	 ;  200 "src/main.c" 1
+ 827 023e 7894      		sei
+ 828               	 ;  0 "" 2
+ 197:src/main.c    ****     int PIND0Pre, PIND1Pre;
+ 830               	.LM139:
+ 831               	/* #NOAPP */
+ 832 0240 30E0      		ldi r19,0
+ 833 0242 20E0      		ldi r18,0
+ 196:src/main.c    ****     int PIND1Cur = 0;
+ 835               	.LM140:
+ 836 0244 50E0      		ldi r21,0
+ 837 0246 40E0      		ldi r20,0
+ 838 0248 E02E      		mov r14,r16
+ 839 024a B12E      		mov r11,r17
+ 201:src/main.c    **** 
+ 202:src/main.c    ****     while (1) {
+ 203:src/main.c    ****         PIND0Pre = PIND0Cur;
+ 204:src/main.c    ****         PIND1Pre = PIND1Cur;
+ 205:src/main.c    ****         PIND0Cur = PIND & _BV(PIND0);
+ 206:src/main.c    ****         PIND1Cur = PIND & _BV(PIND1);
+ 207:src/main.c    ****         if (PIND0Pre && !PIND0Cur) {
+ 208:src/main.c    ****             atn = atn <= 1 ? 11 : atn - 1;
+ 209:src/main.c    ****         }
+ 210:src/main.c    ****         if (PIND1Pre && !PIND1Cur) {
+ 211:src/main.c    ****             atn = atn >= 11 ? 1 : atn + 1;
+ 212:src/main.c    ****         }
+ 213:src/main.c    ****         if (PIND0Pre != PIND0Cur || PIND1Pre != PIND1Cur) {
+ 214:src/main.c    ****             LCDISREn = 0;
+ 215:src/main.c    ****             PrintByte(LCDText, "Atten=", atn);
+ 216:src/main.c    ****             EnQueueLCDBuffer(0xC0);
+ 217:src/main.c    ****             pText = LCDText;
+ 218:src/main.c    ****             while (*pText != 0x00) {
+ 219:src/main.c    ****                 EnQueueLCDBuffer(*pText);
+ 220:src/main.c    ****                 ++pText;
+ 221:src/main.c    ****             }
+ 222:src/main.c    ****             LCDISREn = 1;
+ 841               	.LM141:
+ 842 024c AA24      		clr r10
+ 843 024e A394      		inc r10
+ 844               	.L27:
+ 205:src/main.c    ****         PIND1Cur = PIND & _BV(PIND1);
+ 846               	.LM142:
+ 847 0250 89B1      		in r24,0x9
+ 848 0252 982F      		mov r25,r24
+ 849 0254 9170      		andi r25,lo8(1)
+ 205:src/main.c    ****         PIND1Cur = PIND & _BV(PIND1);
+ 851               	.LM143:
+ 852 0256 80FB      		bst r24,0
+ 853 0258 FF24      		clr r15
+ 854 025a F0F8      		bld r15,0
+ 206:src/main.c    ****         if (PIND0Pre && !PIND0Cur) {
+ 856               	.LM144:
+ 857 025c 89B1      		in r24,0x9
+ 858 025e 8270      		andi r24,lo8(2)
+ 206:src/main.c    ****         if (PIND0Pre && !PIND0Cur) {
+ 860               	.LM145:
+ 861 0260 082F      		mov r16,r24
+ 862 0262 10E0      		ldi r17,0
+ 207:src/main.c    ****             atn = atn <= 1 ? 11 : atn - 1;
+ 864               	.LM146:
+ 865 0264 452B      		or r20,r21
+ 866 0266 01F0      		breq .L28
+ 207:src/main.c    ****             atn = atn <= 1 ? 11 : atn - 1;
+ 868               	.LM147:
+ 869 0268 9111      		cpse r25,__zero_reg__
+ 870 026a 00C0      		rjmp .L29
+ 208:src/main.c    ****         }
+ 872               	.LM148:
+ 873 026c 9091 0000 		lds r25,atn
+ 208:src/main.c    ****         }
+ 875               	.LM149:
+ 876 0270 9230      		cpi r25,lo8(2)
+ 877 0272 00F0      		brlo .L44
+ 208:src/main.c    ****         }
+ 879               	.LM150:
+ 880 0274 9150      		subi r25,lo8(-(-1))
+ 881               	.L30:
+ 208:src/main.c    ****         }
+ 883               	.LM151:
+ 884 0276 9093 0000 		sts atn,r25
+ 210:src/main.c    ****             atn = atn >= 11 ? 1 : atn + 1;
+ 886               	.LM152:
+ 887 027a 232B      		or r18,r19
+ 888 027c 01F0      		breq .L32
+ 210:src/main.c    ****             atn = atn >= 11 ? 1 : atn + 1;
+ 890               	.LM153:
+ 891 027e 8111      		cpse r24,__zero_reg__
+ 892 0280 00C0      		rjmp .L32
+ 893               	.L33:
+ 211:src/main.c    ****         }
+ 895               	.LM154:
+ 896 0282 8091 0000 		lds r24,atn
+ 211:src/main.c    ****         }
+ 898               	.LM155:
+ 899 0286 8B30      		cpi r24,lo8(11)
+ 900 0288 00F4      		brsh .L45
+ 211:src/main.c    ****         }
+ 902               	.LM156:
+ 903 028a 8F5F      		subi r24,lo8(-(1))
+ 904               	.L36:
+ 211:src/main.c    ****         }
+ 906               	.LM157:
+ 907 028c 8093 0000 		sts atn,r24
+ 908               	.L32:
+ 214:src/main.c    ****             PrintByte(LCDText, "Atten=", atn);
+ 910               	.LM158:
+ 911 0290 1092 0000 		sts LCDISREn,__zero_reg__
+ 215:src/main.c    ****             EnQueueLCDBuffer(0xC0);
+ 913               	.LM159:
+ 914 0294 4091 0000 		lds r20,atn
+ 915 0298 60E0      		ldi r22,lo8(.LC1)
+ 916 029a 70E0      		ldi r23,hi8(.LC1)
+ 917 029c 8E2D      		mov r24,r14
+ 918 029e 9B2D      		mov r25,r11
+ 919 02a0 0E94 0000 		call PrintByte
+ 216:src/main.c    ****             pText = LCDText;
+ 921               	.LM160:
+ 922 02a4 80EC      		ldi r24,lo8(-64)
+ 923 02a6 0E94 0000 		call EnQueueLCDBuffer
+ 924 02aa CE2C      		mov r12,r14
+ 925 02ac DB2C      		mov r13,r11
+ 926               	.L39:
+ 218:src/main.c    ****                 EnQueueLCDBuffer(*pText);
+ 928               	.LM161:
+ 929 02ae F601      		movw r30,r12
+ 930 02b0 8191      		ld r24,Z+
+ 931 02b2 6F01      		movw r12,r30
+ 218:src/main.c    ****                 EnQueueLCDBuffer(*pText);
+ 933               	.LM162:
+ 934 02b4 8111      		cpse r24,__zero_reg__
+ 935 02b6 00C0      		rjmp .L40
+ 937               	.LM163:
+ 938 02b8 A092 0000 		sts LCDISREn,r10
+ 939 02bc 00C0      		rjmp .L38
+ 940               	.L44:
+ 208:src/main.c    ****         }
+ 942               	.LM164:
+ 943 02be 9BE0      		ldi r25,lo8(11)
+ 944 02c0 00C0      		rjmp .L30
+ 945               	.L28:
+ 210:src/main.c    ****             atn = atn >= 11 ? 1 : atn + 1;
+ 947               	.LM165:
+ 948 02c2 2115      		cp r18,__zero_reg__
+ 949 02c4 3105      		cpc r19,__zero_reg__
+ 950 02c6 01F0      		breq .L34
+ 210:src/main.c    ****             atn = atn >= 11 ? 1 : atn + 1;
+ 952               	.LM166:
+ 953 02c8 8823      		tst r24
+ 954 02ca 01F0      		breq .L33
+ 955               	.L34:
+ 213:src/main.c    ****             LCDISREn = 0;
+ 957               	.LM167:
+ 958 02cc 9111      		cpse r25,__zero_reg__
+ 959 02ce 00C0      		rjmp .L32
+ 960               	.L43:
+ 213:src/main.c    ****             LCDISREn = 0;
+ 962               	.LM168:
+ 963 02d0 2017      		cp r18,r16
+ 964 02d2 3107      		cpc r19,r17
+ 965 02d4 01F4      		brne .L32
+ 966               	.L38:
+ 223:src/main.c    ****         }
+ 224:src/main.c    ****         if (NByte != 0) {
+ 968               	.LM169:
+ 969 02d6 8091 0000 		lds r24,NByte
+ 970 02da 8823      		tst r24
+ 971 02dc 01F0      		breq .L41
+ 225:src/main.c    ****             TIMSK2 |= _BV(OCIE2A);
+ 973               	.LM170:
+ 974 02de 8091 7000 		lds r24,112
+ 975 02e2 8260      		ori r24,lo8(2)
+ 976 02e4 8093 7000 		sts 112,r24
+ 977               	.L41:
+ 206:src/main.c    ****         if (PIND0Pre && !PIND0Cur) {
+ 979               	.LM171:
+ 980 02e8 9801      		movw r18,r16
+ 205:src/main.c    ****         PIND1Cur = PIND & _BV(PIND1);
+ 982               	.LM172:
+ 983 02ea 4F2D      		mov r20,r15
+ 984 02ec 50E0      		ldi r21,0
+ 985 02ee 00C0      		rjmp .L27
+ 986               	.L45:
+ 211:src/main.c    ****         }
+ 988               	.LM173:
+ 989 02f0 81E0      		ldi r24,lo8(1)
+ 990 02f2 00C0      		rjmp .L36
+ 991               	.L40:
+ 219:src/main.c    ****                 ++pText;
+ 993               	.LM174:
+ 994 02f4 0E94 0000 		call EnQueueLCDBuffer
+ 995 02f8 00C0      		rjmp .L39
+ 996               	.L29:
+ 210:src/main.c    ****             atn = atn >= 11 ? 1 : atn + 1;
+ 998               	.LM175:
+ 999 02fa 2115      		cp r18,__zero_reg__
+ 1000 02fc 3105      		cpc r19,__zero_reg__
+ 1001 02fe 01F0      		breq .L43
+ 210:src/main.c    ****             atn = atn >= 11 ? 1 : atn + 1;
+ 1003               	.LM176:
+ 1004 0300 8111      		cpse r24,__zero_reg__
+ 1005 0302 00C0      		rjmp .L43
+ 1006 0304 00C0      		rjmp .L33
+ 1011               	.Lscope5:
+ 1012               		.local	pText.0
+ 1013               		.comm	pText.0,2,1
+ 1015               		.local	LCDText.1
+ 1016               		.comm	LCDText.1,16,1
+ 1018               		.data
+ 1021               	BCount.2:
+ 1022 0000 20        		.byte	32
+ 1026               	pLCDOut.3:
+ 1027 0001 0000      		.word	LCDBuffer
+ 1029               		.local	BCount.4
+ 1030               		.comm	BCount.4,1,1
+ 1034               	pLCDIn.5:
+ 1035 0003 0000      		.word	LCDBuffer
+ 1037               	.global	LCDISREn
+ 1040               	LCDISREn:
+ 1041 0005 01        		.byte	1
+ 1043               	.global	atn
+ 1046               	atn:
+ 1047 0006 01        		.byte	1
+ 1049               	.global	NByte
+ 1050               		.section .bss
+ 1053               	NByte:
+ 1054 0000 00        		.zero	1
+ 1056               	.global	LCDBuffer
+ 1059               	LCDBuffer:
+ 1060 0001 0000 0000 		.zero	32
+ 1060      0000 0000 
+ 1060      0000 0000 
+ 1060      0000 0000 
+ 1060      0000 0000 
+ 1062               		.text
+ 1064               	.Letext0:
+ 1065               		.ident	"GCC: (GNU) 11.2.0"
+ 1066               	.global __do_copy_data
+ 1067               	.global __do_clear_bss
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 main.c
+     /tmp/ccWUtyuq.s:2      *ABS*:000000000000003e __SP_H__
+     /tmp/ccWUtyuq.s:3      *ABS*:000000000000003d __SP_L__
+     /tmp/ccWUtyuq.s:4      *ABS*:000000000000003f __SREG__
+     /tmp/ccWUtyuq.s:5      *ABS*:0000000000000000 __tmp_reg__
+     /tmp/ccWUtyuq.s:6      *ABS*:0000000000000001 __zero_reg__
+     /tmp/ccWUtyuq.s:17     .text:0000000000000000 EnQueueLCDBuffer
+     /tmp/ccWUtyuq.s:1053   .bss:0000000000000000 NByte
+     /tmp/ccWUtyuq.s:1034   .data:0000000000000003 pLCDIn.5
+     /tmp/ccWUtyuq.s:1016   .bss:0000000000000033 BCount.4
+     /tmp/ccWUtyuq.s:1059   .bss:0000000000000001 LCDBuffer
+     /tmp/ccWUtyuq.s:91     .text:0000000000000048 DeQueueLCDBuffer
+     /tmp/ccWUtyuq.s:1026   .data:0000000000000001 pLCDOut.3
+     /tmp/ccWUtyuq.s:1021   .data:0000000000000000 BCount.2
+     /tmp/ccWUtyuq.s:220    .text:00000000000000ca __vector_11
+     /tmp/ccWUtyuq.s:1046   .data:0000000000000006 atn
+     /tmp/ccWUtyuq.s:1040   .data:0000000000000005 LCDISREn
+     /tmp/ccWUtyuq.s:1013   .bss:0000000000000023 LCDText.1
+                             .bss:0000000000000021 pText.0
+     /tmp/ccWUtyuq.s:395    .text:00000000000001a2 __vector_7
+     /tmp/ccWUtyuq.s:485    .text.startup:0000000000000000 main
+
+UNDEFINED SYMBOLS
+PrintByte
+LCD_Init
+LCD_MoveCursor
+LCD_WriteString
+__do_copy_data
+__do_clear_bss

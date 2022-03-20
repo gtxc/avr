@@ -1,0 +1,255 @@
+   1               		.file	"main.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__tmp_reg__ = 0
+   6               	__zero_reg__ = 1
+   8               		.text
+   9               	.Ltext0:
+  13               	.global	delay_gt
+  15               	delay_gt:
+   1:src/main.c    **** /*
+   2:src/main.c    ****  * Created by gt on 1/2/22 - 9:26 PM.
+   3:src/main.c    ****  * Copyright (c) 2022 GTXC. All rights reserved.
+   4:src/main.c    ****  */
+   5:src/main.c    **** 
+   6:src/main.c    **** #include <avr/io.h>
+   7:src/main.c    **** #include <util/delay.h>
+   8:src/main.c    **** 
+   9:src/main.c    **** // 125ns * 8 * 1000 = 1ms
+  10:src/main.c    **** // ldi  -> 1 cycle  : 125 ns
+  11:src/main.c    **** // ldi  -> 1 cycle  : 125 ns
+  12:src/main.c    **** // nop  -> 1 cycle  : 125 ns
+  13:src/main.c    **** // sbiw -> 2 cycles : 250 ns
+  14:src/main.c    **** // brne -> 1/2 cycle: 62.5 ns
+  15:src/main.c    **** // ret  -> 4 cycles : 500 ns
+  16:src/main.c    **** // 437.5 x + 750 = 1 000 000
+  17:src/main.c    **** // x = 2284
+  18:src/main.c    **** void delay_gt(void) {
+  17               	.LM0:
+  18               	.LFBB1:
+  19               	/* prologue: function */
+  20               	/* frame size = 0 */
+  21               	/* stack size = 0 */
+  22               	.L__stack_usage = 0
+  24               	.LM1:
+  25 0000 86E3      		ldi r24,lo8(54)
+  26 0002 96E0      		ldi r25,lo8(6)
+  27               	.L2:
+  28               	.LBB2:
+  19:src/main.c    ****     for (int i = 0; i < 1590; ++i)
+  20:src/main.c    ****         __asm__ volatile ("NOP");
+  30               	.LM2:
+  31               	/* #APP */
+  32               	 ;  20 "src/main.c" 1
+  33 0004 0000      		NOP
+  34               	 ;  0 "" 2
+  19:src/main.c    ****     for (int i = 0; i < 1590; ++i)
+  36               	.LM3:
+  37               	/* #NOAPP */
+  38 0006 0197      		sbiw r24,1
+  39 0008 01F4      		brne .L2
+  40               	/* epilogue start */
+  41               	.LBE2:
+  21:src/main.c    **** }
+  43               	.LM4:
+  44 000a 0895      		ret
+  46               	.Lscope1:
+  47               		.section	.text.startup,"ax",@progbits
+  52               	.global	main
+  54               	main:
+  22:src/main.c    **** 
+  23:src/main.c    **** // in   -> 1
+  24:src/main.c    **** // mov  -> 1
+  25:src/main.c    **** // andi -> 1
+  26:src/main.c    **** // andi -> 1
+  27:src/main.c    **** // sbiw -> 2 if
+  28:src/main.c    **** // brne -> 1/2 if
+  29:src/main.c    **** // or   -> 1 if
+  30:src/main.c    **** // breq -> 1/2 if
+  31:src/main.c    **** // cpse -> 1/2/3 if
+  32:src/main.c    **** // rjmp -> 2 if
+  33:src/main.c    **** // sbiw -> 2 --cnt
+  34:src/main.c    **** 
+  35:src/main.c    **** int main(void) {
+  56               	.LM5:
+  57               	.LFBB2:
+  58               	/* prologue: function */
+  59               	/* frame size = 0 */
+  60               	/* stack size = 0 */
+  61               	.L__stack_usage = 0
+  36:src/main.c    ****     DDRB = 0xFF;
+  63               	.LM6:
+  64 0000 8FEF      		ldi r24,lo8(-1)
+  65 0002 84B9      		out 0x4,r24
+  37:src/main.c    ****     DDRD = 0xFC;    // PORTD[0:1] -> input, PORTD[2:7] -> output
+  67               	.LM7:
+  68 0004 8CEF      		ldi r24,lo8(-4)
+  69 0006 8AB9      		out 0xa,r24
+  38:src/main.c    ****     PORTD = 0x03;   // turns on internal pull-ups for PIND1 and PIND2
+  71               	.LM8:
+  72 0008 83E0      		ldi r24,lo8(3)
+  73 000a 8BB9      		out 0xb,r24
+  39:src/main.c    ****     PORTB = 0x02;   // turn on LED1 as a starting point
+  75               	.LM9:
+  76 000c 82E0      		ldi r24,lo8(2)
+  77 000e 85B9      		out 0x5,r24
+  40:src/main.c    ****     int cnt250ms = 250;
+  41:src/main.c    ****     int pind_curr = 1;
+  79               	.LM10:
+  80 0010 21E0      		ldi r18,lo8(1)
+  81 0012 30E0      		ldi r19,0
+  40:src/main.c    ****     int cnt250ms = 250;
+  83               	.LM11:
+  84 0014 CAEF      		ldi r28,lo8(-6)
+  85 0016 D0E0      		ldi r29,0
+  86               	.L9:
+  42:src/main.c    ****     int pind_prev;
+  43:src/main.c    ****     while (1) {
+  44:src/main.c    ****         PORTD |= 0x10;
+  88               	.LM12:
+  89 0018 5C9A      		sbi 0xb,4
+  45:src/main.c    ****         pind_prev = pind_curr;
+  46:src/main.c    ****         pind_curr = PIND & _BV(PIND0);
+  91               	.LM13:
+  92 001a 19B1      		in r17,0x9
+  93 001c 612F      		mov r22,r17
+  94 001e 6170      		andi r22,lo8(1)
+  96               	.LM14:
+  97 0020 1170      		andi r17,1
+  47:src/main.c    ****         if (!cnt250ms) {
+  99               	.LM15:
+ 100 0022 2097      		sbiw r28,0
+ 101 0024 01F4      		brne .L5
+  48:src/main.c    ****             if (!(PIND & _BV(PIND1))) {
+ 103               	.LM16:
+ 104 0026 4999      		sbic 0x9,1
+ 105 0028 00C0      		rjmp .L6
+  49:src/main.c    ****                 PORTB = PORTB >> 1 | PORTB << 7;
+ 107               	.LM17:
+ 108 002a 85B1      		in r24,0x5
+ 110               	.LM18:
+ 111 002c 45B1      		in r20,0x5
+ 113               	.LM19:
+ 114 002e 90E8      		ldi r25,lo8(-128)
+ 115 0030 499F      		mul r20,r25
+ 116 0032 A001      		movw r20,r0
+ 117 0034 1124      		clr __zero_reg__
+ 119               	.LM20:
+ 120 0036 8695      		lsr r24
+ 121 0038 842B      		or r24,r20
+ 122               	.L13:
+  50:src/main.c    ****             } else {
+  51:src/main.c    ****                 PORTB = PORTB << 1 | PORTB >> 7;
+ 124               	.LM21:
+ 125 003a 85B9      		out 0x5,r24
+  52:src/main.c    ****             }
+  53:src/main.c    ****             cnt250ms = 250;
+ 127               	.LM22:
+ 128 003c CAEF      		ldi r28,lo8(-6)
+ 129 003e D0E0      		ldi r29,0
+ 130               	.L5:
+  54:src/main.c    ****         }
+  55:src/main.c    ****         if (pind_prev && !pind_curr) {
+ 132               	.LM23:
+ 133 0040 232B      		or r18,r19
+ 134 0042 01F0      		breq .L7
+ 136               	.LM24:
+ 137 0044 6111      		cpse r22,__zero_reg__
+ 138 0046 00C0      		rjmp .L7
+  56:src/main.c    ****             if (!(PIND & _BV(PIND1))) {
+ 140               	.LM25:
+ 141 0048 4999      		sbic 0x9,1
+ 142 004a 00C0      		rjmp .L8
+  57:src/main.c    ****                 PORTB = PORTB >> 1 | PORTB << 7;
+ 144               	.LM26:
+ 145 004c 85B1      		in r24,0x5
+ 147               	.LM27:
+ 148 004e 25B1      		in r18,0x5
+ 150               	.LM28:
+ 151 0050 90E8      		ldi r25,lo8(-128)
+ 152 0052 299F      		mul r18,r25
+ 153 0054 9001      		movw r18,r0
+ 154 0056 1124      		clr __zero_reg__
+ 156               	.LM29:
+ 157 0058 8695      		lsr r24
+ 158 005a 822B      		or r24,r18
+ 159               	.L14:
+  58:src/main.c    ****             } else {
+  59:src/main.c    ****                 PORTB = PORTB << 1 | PORTB >> 7;
+ 161               	.LM30:
+ 162 005c 85B9      		out 0x5,r24
+  60:src/main.c    ****             }
+  61:src/main.c    ****             cnt250ms = 250;
+ 164               	.LM31:
+ 165 005e CAEF      		ldi r28,lo8(-6)
+ 166 0060 D0E0      		ldi r29,0
+ 167               	.L7:
+  62:src/main.c    ****         }
+  63:src/main.c    ****         --cnt250ms;
+ 169               	.LM32:
+ 170 0062 2197      		sbiw r28,1
+  64:src/main.c    ****         delay_gt();
+ 172               	.LM33:
+ 173 0064 0E94 0000 		call delay_gt
+  65:src/main.c    ****         PORTD &= 0xEF;
+ 175               	.LM34:
+ 176 0068 5C98      		cbi 0xb,4
+  46:src/main.c    ****         if (!cnt250ms) {
+ 178               	.LM35:
+ 179 006a 212F      		mov r18,r17
+ 180 006c 30E0      		ldi r19,0
+  44:src/main.c    ****         pind_prev = pind_curr;
+ 182               	.LM36:
+ 183 006e 00C0      		rjmp .L9
+ 184               	.L6:
+  51:src/main.c    ****             }
+ 186               	.LM37:
+ 187 0070 85B1      		in r24,0x5
+  51:src/main.c    ****             }
+ 189               	.LM38:
+ 190 0072 95B1      		in r25,0x5
+  51:src/main.c    ****             }
+ 192               	.LM39:
+ 193 0074 880F      		lsl r24
+  51:src/main.c    ****             }
+ 195               	.LM40:
+ 196 0076 991F      		rol r25
+ 197 0078 9927      		clr r25
+ 198 007a 991F      		rol r25
+ 199 007c 892B      		or r24,r25
+ 200 007e 00C0      		rjmp .L13
+ 201               	.L8:
+  59:src/main.c    ****             }
+ 203               	.LM41:
+ 204 0080 85B1      		in r24,0x5
+  59:src/main.c    ****             }
+ 206               	.LM42:
+ 207 0082 95B1      		in r25,0x5
+  59:src/main.c    ****             }
+ 209               	.LM43:
+ 210 0084 991F      		rol r25
+ 211 0086 9927      		clr r25
+ 212 0088 991F      		rol r25
+  59:src/main.c    ****             }
+ 214               	.LM44:
+ 215 008a 880F      		lsl r24
+  59:src/main.c    ****             }
+ 217               	.LM45:
+ 218 008c 892B      		or r24,r25
+ 219 008e 00C0      		rjmp .L14
+ 224               	.Lscope2:
+ 225               		.text
+ 227               	.Letext0:
+ 228               		.ident	"GCC: (GNU) 11.2.0"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 main.c
+     /tmp/ccTnWTbS.s:2      *ABS*:000000000000003e __SP_H__
+     /tmp/ccTnWTbS.s:3      *ABS*:000000000000003d __SP_L__
+     /tmp/ccTnWTbS.s:4      *ABS*:000000000000003f __SREG__
+     /tmp/ccTnWTbS.s:5      *ABS*:0000000000000000 __tmp_reg__
+     /tmp/ccTnWTbS.s:6      *ABS*:0000000000000001 __zero_reg__
+     /tmp/ccTnWTbS.s:15     .text:0000000000000000 delay_gt
+     /tmp/ccTnWTbS.s:54     .text.startup:0000000000000000 main
+
+NO UNDEFINED SYMBOLS

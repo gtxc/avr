@@ -1,0 +1,120 @@
+   1               		.file	"main.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__tmp_reg__ = 0
+   6               	__zero_reg__ = 1
+   8               		.text
+   9               	.Ltext0:
+  11               		.section	.text.startup,"ax",@progbits
+  16               	.global	main
+  18               	main:
+   1:src/main.c    **** /*
+   2:src/main.c    ****  * Created by gt on 1/2/22 - 9:26 PM.
+   3:src/main.c    ****  * Copyright (c) 2022 GTXC. All rights reserved.
+   4:src/main.c    ****  */
+   5:src/main.c    **** 
+   6:src/main.c    **** #include <avr/io.h>
+   7:src/main.c    **** #include <util/delay.h>
+   8:src/main.c    **** 
+   9:src/main.c    **** //int main(void) {
+  10:src/main.c    **** //    DDRB = 0xFF;
+  11:src/main.c    **** //    DDRD = 0xFC;    // PORTD[0:1] -> input, PORTD[2:7] -> output
+  12:src/main.c    **** //    PORTB = 0x02;
+  13:src/main.c    **** //    while (1) {
+  14:src/main.c    **** //        if (!(PIND & _BV(PIND0))) {
+  15:src/main.c    **** //            if (!(PIND & _BV(PIND1))) {
+  16:src/main.c    **** //                PORTB = PORTB >> 1 | PORTB << 7;
+  17:src/main.c    **** //            } else {
+  18:src/main.c    **** //                __asm__ volatile ("NOP");
+  19:src/main.c    **** //                PORTB = PORTB << 1 | PORTB >> 7;
+  20:src/main.c    **** //            }
+  21:src/main.c    **** //        }
+  22:src/main.c    **** //    }
+  23:src/main.c    **** //    return 0;
+  24:src/main.c    **** //}
+  25:src/main.c    **** 
+  26:src/main.c    **** int main(void) {
+  20               	.LM0:
+  21               	.LFBB1:
+  22               	/* prologue: function */
+  23               	/* frame size = 0 */
+  24               	/* stack size = 0 */
+  25               	.L__stack_usage = 0
+  27:src/main.c    ****     DDRB = 0xFF;
+  27               	.LM1:
+  28 0000 8FEF      		ldi r24,lo8(-1)
+  29 0002 84B9      		out 0x4,r24
+  28:src/main.c    ****     DDRD = 0xFC;    // PORTD[0:1] -> input, PORTD[2:7] -> output
+  31               	.LM2:
+  32 0004 8CEF      		ldi r24,lo8(-4)
+  33 0006 8AB9      		out 0xa,r24
+  29:src/main.c    ****     PORTD = 0x03;
+  35               	.LM3:
+  36 0008 83E0      		ldi r24,lo8(3)
+  37 000a 8BB9      		out 0xb,r24
+  30:src/main.c    ****     PORTB = 0x02;
+  39               	.LM4:
+  40 000c 82E0      		ldi r24,lo8(2)
+  41               	.L7:
+  42 000e 85B9      		out 0x5,r24
+  43               	.L3:
+  31:src/main.c    ****     while (1) {
+  32:src/main.c    ****         if (!(PIND & _BV(PIND0))) {
+  45               	.LM5:
+  46 0010 4899      		sbic 0x9,0
+  47 0012 00C0      		rjmp .L3
+  33:src/main.c    ****             if (!(PIND & _BV(PIND1))) {
+  49               	.LM6:
+  50 0014 4999      		sbic 0x9,1
+  51 0016 00C0      		rjmp .L4
+  34:src/main.c    ****                 PORTB = PORTB >> 1 | PORTB << 7;
+  53               	.LM7:
+  54 0018 85B1      		in r24,0x5
+  56               	.LM8:
+  57 001a 25B1      		in r18,0x5
+  59               	.LM9:
+  60 001c 90E8      		ldi r25,lo8(-128)
+  61 001e 299F      		mul r18,r25
+  62 0020 9001      		movw r18,r0
+  63 0022 1124      		clr __zero_reg__
+  65               	.LM10:
+  66 0024 8695      		lsr r24
+  67 0026 822B      		or r24,r18
+  68 0028 00C0      		rjmp .L7
+  69               	.L4:
+  35:src/main.c    ****             } else {
+  36:src/main.c    ****                 __asm__ volatile ("NOP");
+  71               	.LM11:
+  72               	/* #APP */
+  73               	 ;  36 "src/main.c" 1
+  74 002a 0000      		NOP
+  75               	 ;  0 "" 2
+  37:src/main.c    ****                 PORTB = PORTB << 1 | PORTB >> 7;
+  77               	.LM12:
+  78               	/* #NOAPP */
+  79 002c 85B1      		in r24,0x5
+  81               	.LM13:
+  82 002e 95B1      		in r25,0x5
+  84               	.LM14:
+  85 0030 880F      		lsl r24
+  87               	.LM15:
+  88 0032 991F      		rol r25
+  89 0034 9927      		clr r25
+  90 0036 991F      		rol r25
+  91 0038 892B      		or r24,r25
+  92 003a 00C0      		rjmp .L7
+  94               	.Lscope1:
+  95               		.text
+  97               	.Letext0:
+  98               		.ident	"GCC: (GNU) 11.2.0"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 main.c
+     /tmp/cc8CNDZP.s:2      *ABS*:000000000000003e __SP_H__
+     /tmp/cc8CNDZP.s:3      *ABS*:000000000000003d __SP_L__
+     /tmp/cc8CNDZP.s:4      *ABS*:000000000000003f __SREG__
+     /tmp/cc8CNDZP.s:5      *ABS*:0000000000000000 __tmp_reg__
+     /tmp/cc8CNDZP.s:6      *ABS*:0000000000000001 __zero_reg__
+     /tmp/cc8CNDZP.s:18     .text.startup:0000000000000000 main
+
+NO UNDEFINED SYMBOLS
